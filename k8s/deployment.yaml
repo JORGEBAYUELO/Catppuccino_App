@@ -17,5 +17,6 @@ spec:
       containers:
         - name: react-portfolio
           image: jorgebayuelo/react-portfolio:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
