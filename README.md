@@ -37,8 +37,6 @@ eksctl create cluster --name portfolio-eks --region us-east-1 --nodegroup-name d
 ```bash
 eksctl create nodegroup --cluster portfolio-eks --region us-east-1 --name argocd-nodes --node-type t3.medium --nodes 1 --nodes-min 1 --nodes-max 1 --managed
 ```
-```
-```
 
 ### 2. NGINX Ingress Controller
 
@@ -77,12 +75,3 @@ kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.pas
 ## Deployment
 
 ### 1. React App Dockerization
-
-```
-```
-```
-```
-```
-```
-```
-```
