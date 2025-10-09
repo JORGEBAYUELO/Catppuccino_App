@@ -31,5 +31,58 @@ This project highlights my DevOps skills across **AWS, Kubernetes, Docker, CI/CD
   - **t3.medium** dedicated for ArgoCD.
 
 ```bash
-eksctl create cluster --name portfolio-eks --region us-east-1 --nodegroup-name demo-nodes --node-type t3.micro --nodes 1
+eksctl create cluster --name portfolio-eks --region us-east-1 --nodegroup-name demo-nodes --node-type t3.micro --nodes 1 --nodes-min 1 --nodes-max 1 --managed
+```
+
+```bash
+eksctl create nodegroup --cluster portfolio-eks --region us-east-1 --name argocd-nodes --node-type t3.medium --nodes 1 --nodes-min 1 --nodes-max 1 --managed
+```
+```
+```
+
+### 2. NGINX Ingress Controller
+
+Installed to handle external traffic and expose the React app:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/aws/deploy.yaml
+```
+
+### 3. ArgoCD Installation
+
+Installed ArgoCD in the `argocd` namespace:
+
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+Expose ArgoCD UI using port-forward:
+
+```bash
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+
+Then open http://localhost:8080 in your browser.
+
+#### Default Login Credentials
+
+- **Username:** `admin`
+- **Password:** auto-generated, stored in a Kubernetes secret:
+
+```bash
+kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 -d
+```
+
+## Deployment
+
+### 1. React App Dockerization
+
+```
+```
+```
+```
+```
+```
+```
 ```
