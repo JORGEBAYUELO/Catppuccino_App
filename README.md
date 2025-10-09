@@ -332,7 +332,7 @@ Log in to the **AWS Console**, go to **EC2** -> **Instances** and **VPC** -> **V
 - React app running via AWS LoadBalancer.
 - ArgoCD UI showing healthy + synced application.
 
-(Space for Images Links)
+![React app running via AWS LoadBalancer](/screenshots/React_app.png)
 (Space for Images Links)
 
 ## Lessons Learned
