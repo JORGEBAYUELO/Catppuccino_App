@@ -139,10 +139,95 @@ docker push <YOUR_DOCKERHUB_USERNAME>/react-portfolio:latest
 ```
 
 Replace <YOUR_DOCKERHUB_USERNAME> with your actual Docker Hub username.
+
+### 2. Kubernetes Manifests (`k8s/`)
+
+1. **Create a new folder** in your React app repository to store Kubernetes manifests.
+
+```bash
+cd react-app/ # or wherever your repo is
+mkdir -p k8s
+cd k8s
 ```
+
+2. **Create a Deployment YAML** for your React app:
+
+```yaml
+# k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-portfolio
+  labels:
+    app: react-portfolio
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: react-portfolio
+  template:
+    metadata:
+      labels:
+        app: react-portfolio
+    spec:
+      containers:
+        - name: react-portfolio
+          image: <YOUR_DOCKERHUB_USERNAME>/react-portfolio:latest
+          ports:
+            - containerPort: 80
 ```
+
+Replace `YOUR_DOCKERHUB_USERNAME` with your actual Docker Hub username where the image of your React app is pushed.
+
+3. **Create a Service YAML** so the app is reachable inside the cluster:
+
+```bash
+# k8s/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: react-portfolio-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: react-portfolio
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
 ```
+
+4. **Commit and push** these files to your GitHub repo:
+
+```bash
+git add k8s/deployment.yaml k8s/service.yaml
+git commit -m "Add Kubernetes manifests for React app"
+git push origin main
 ```
+
+### 3. ArgoCD application
+
+Deployed ArgoCD application manifests:
+
+```bash
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: react-portfolio
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/<your-username>/<repo>.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
 ```
-```
-```
+
+This ensures ArgoCD syncs the `k8s/` directory automatically.
