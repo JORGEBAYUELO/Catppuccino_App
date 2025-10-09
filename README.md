@@ -173,6 +173,7 @@ spec:
       containers:
         - name: react-portfolio
           image: <YOUR_DOCKERHUB_USERNAME>/react-portfolio:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
 ```
@@ -231,3 +232,112 @@ spec:
 ```
 
 This ensures ArgoCD syncs the `k8s/` directory automatically.
+
+### 4. CI/CD Pipeline
+
+#### GitHub Actions -> Docker Hub -> ArgoCD -> Kubernetes
+
+- **Workflow** (`.github/Workflows/docker-build-push.yaml`)
+  - Triggere: push to `main` branch.
+  - Builds React app Docker image.
+  - Pushes to Docker Hub with `latest` tag.
+
+```yaml
+name: CI - Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main  # runs when you push to main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t your-dockerhub-username/your-image-name:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push your-dockerhub-username/your-image-name:latest
+```
+
+Make sure to replace `your-dockerhub-username` and `your-image-name` with your actual docker username and image name.
+
+- **ArgoCD** wateches GitHub repo -> auto-syncs -> updates app in Kubernetes.
+- **imagePullPolicy:** **Always** ensures the latest image is always pulled.
+- **Manual restart (if needed)**:
+
+```bash
+kubectl rollout restart deployment react-portfolio -n default
+```
+
+## Cleaning up
+
+When finished with the project make sure to clean up and destroy all resources to avoid extra charges:
+
+1. Delete the Nodegroup:
+
+```bash
+eksctl delete nodegroup --cluster portfolio-eks --region us-east-1 --name demo-nodes --drain=false
+```
+
+```bash
+eksctl delete nodegroup --cluster portfolio-eks --region us-east-1 --name argocd-nodes --drain=false
+```
+
+Check deletion status:
+
+```bash
+eksctl get nodegroup --cluster $CLUSTER_NAME --region $AWS_REGION
+```
+
+You should see **no nodegroups listed.**
+
+2. Delete the EKS Cluster
+
+Once the nodegroups are gone, delete the cluster:
+
+```bash
+eksctl delete cluster --name portfolio-eks --region us-east-1
+```
+
+This will also delete the VPC, subnets, security groups, and other associated resources created by `eksctl`.
+
+Check cluster status:
+
+```bash
+eksctl get cluster --region us-east-1
+```
+
+No clusters should appear.
+
+3. Verify AWS Console
+
+Log in to the **AWS Console**, go to **EC2** -> **Instances** and **VPC** -> **VPC/Subnets** to confirm everything has been removed.
+
+## Screenshots
+
+- React app running via AWS LoadBalancer.
+- ArgoCD UI showing healthy + synced application.
+
+(Space for Images Links)
+(Space for Images Links)
+
+## Lessons Learned
+
+- **Node Scaling:** Running on `t3.micro` was too limited (pods stuck Pending). Scaling to `t3.medium` fixed scheduling issues.
+- **Cluster Upgrades:** Control plane upgrade requires careful node group upgrade/replacement.
+- **GitOps Flow:** ArgoCD simplifies deployment, no manual `kubectl apply` once manifests are defined.
+- **CI/CD Simplicity:** Using `latest` tag with `imagePullPolicy: Always` provides an easy workflow, but production systems should use versioned tags.
