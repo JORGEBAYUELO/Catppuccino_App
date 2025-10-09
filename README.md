@@ -75,3 +75,74 @@ kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.pas
 ## Deployment
 
 ### 1. React App Dockerization
+
+#### Build the React app Docker image
+
+1. Inside the React app folder, create a Dockerfile:
+
+```dockerfile
+# Stage 1: build React app
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Build the React app
+RUN npm run build
+
+# Stage 2: serve app with nginx
+FROM nginx:alpine
+
+# Remove default nginx content
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy the dist folder
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+2. Build the Docker image locally:
+
+```bash
+docker build -t react-portfolio:latest .
+```
+
+3. Push the Docker image to Docker Hub
+
+- **Login to Docker Hub:**
+
+```bash
+docker login
+```
+
+- **Tag the image** for Docker Hub:
+
+```bash
+docker tag react-portfolio:latest <YOUR_DOCKERHUB_USERNAME>/react-portfolio:latest
+```
+
+- **Push the image:**
+
+```bash
+docker push <YOUR_DOCKERHUB_USERNAME>/react-portfolio:latest
+```
+
+Replace <YOUR_DOCKERHUB_USERNAME> with your actual Docker Hub username.
+```
+```
+```
+```
+```
+```
+```
